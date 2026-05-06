@@ -37,6 +37,12 @@ Basic accounting command syntax is documented on a standalone GitHub page:
 
 [Accounting Commands Guide](docs/accounting-commands.md)
 
+## Interface Design
+
+GUI and terminal interface design notes are documented here:
+
+[GUI Design Guide](docs/gui-design.md)
+
 ## Termux
 
 ```bash
