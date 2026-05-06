@@ -28,6 +28,12 @@ python money.py list --limit 20
 
 Amounts use positive numbers for income and negative numbers for expenses.
 
+## Usage Guide
+
+Basic accounting command syntax is documented on a standalone GitHub page:
+
+[Accounting Commands Guide](docs/accounting-commands.md)
+
 ## Termux
 
 ```bash
