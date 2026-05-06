@@ -16,6 +16,10 @@ Available commands:
 
 - `add`: add one income or expense transaction
 - `list`: show recent transactions
+- `notes`: show remembered notes from previous transactions
+- `categories`: show remembered categories
+- `accounts`: show remembered accounts
+- `quick`: open quick entry with remembered values and a virtual keyboard
 - `report`: show a monthly report with charts
 - `dash`: open the terminal dashboard
 - `demo`: insert sample data for testing
@@ -91,6 +95,52 @@ Filter by date range:
 ```bash
 python money.py list --from 2026-05-01 --to 2026-05-31
 ```
+
+### Remembered Notes, Categories, And Accounts
+
+MoneyTerm remembers notes, categories, and accounts from previous transactions.
+You can list them before adding a new record.
+
+```bash
+python money.py notes
+python money.py categories
+python money.py accounts
+```
+
+Limit how many suggestions are shown:
+
+```bash
+python money.py notes --limit 5
+python money.py categories --limit 5
+```
+
+### Quick Entry With Virtual Keyboard
+
+Open quick entry mode:
+
+```bash
+python money.py quick
+```
+
+In quick entry mode, you can type normally or use the on-screen virtual keyboard
+with arrow keys and Enter.
+
+Useful controls:
+
+- `Tab`: move between amount, note, category, and account
+- arrow keys: move around the virtual keyboard
+- `Enter`: press the selected virtual key
+- `NOTE<` / `NOTE>`: choose remembered notes
+- `CAT<` / `CAT>`: choose remembered categories
+- `SAVE`: save the transaction
+- `QUIT` or `q`: exit
+
+Quick category buttons:
+
+- `FOOD`: category `food`
+- `TRANS`: category `transport`
+- `SHOP`: category `shopping`
+- `OTHER`: category `other`
 
 ### Monthly Report
 
@@ -171,6 +221,10 @@ python money.py <指令> [選項]
 
 - `add`：新增一筆收入或支出
 - `list`：列出最近交易紀錄
+- `notes`：列出舊有備註
+- `categories`：列出舊有分類
+- `accounts`：列出舊有帳戶
+- `quick`：開啟快速輸入模式，含舊資料選擇與虛擬鍵盤
 - `report`：顯示月報表與圖表
 - `dash`：開啟終端機互動儀表板
 - `demo`：加入測試用範例資料
@@ -246,6 +300,50 @@ python money.py list --limit 20
 ```bash
 python money.py list --from 2026-05-01 --to 2026-05-31
 ```
+
+### 記憶舊備註、分類、帳戶
+
+MoneyTerm 會從過去交易記住備註、分類、帳戶，方便下次快速選用。
+
+```bash
+python money.py notes
+python money.py categories
+python money.py accounts
+```
+
+限制顯示數量：
+
+```bash
+python money.py notes --limit 5
+python money.py categories --limit 5
+```
+
+### 使用虛擬鍵盤快速輸入
+
+開啟快速輸入模式：
+
+```bash
+python money.py quick
+```
+
+在 quick 模式中，可以直接打字，也可以用方向鍵與 Enter 操作畫面上的虛擬鍵盤。
+
+常用操作：
+
+- `Tab`：切換金額、備註、分類、帳戶欄位
+- 方向鍵：移動虛擬鍵盤選取位置
+- `Enter`：按下目前選到的虛擬按鍵
+- `NOTE<` / `NOTE>`：選擇舊有備註
+- `CAT<` / `CAT>`：選擇舊有分類
+- `SAVE`：儲存交易
+- `QUIT` 或 `q`：離開
+
+快速分類按鍵：
+
+- `FOOD`：分類 `food`
+- `TRANS`：分類 `transport`
+- `SHOP`：分類 `shopping`
+- `OTHER`：分類 `other`
 
 ### 月報表
 

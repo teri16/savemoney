@@ -32,6 +32,20 @@ class Summary:
     balance: int
 
 
+@dataclass
+class QuickEntryState:
+    amount: str = "-"
+    note: str = ""
+    category: str = "food"
+    account: str = "cash"
+    date: str = "today"
+    active_field: int = 0
+    selected_key: int = 0
+    note_index: int = 0
+    category_index: int = 0
+    message: str = ""
+
+
 def connect() -> sqlite3.Connection:
     APP_DIR.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(DB_PATH)
@@ -115,21 +129,34 @@ def get_or_create_category(conn: sqlite3.Connection, name: str, amount: int) -> 
     return int(cur.lastrowid)
 
 
+def insert_transaction(
+    conn: sqlite3.Connection,
+    amount: int,
+    note: str,
+    category: str,
+    account: str,
+    date_value: str,
+) -> None:
+    if amount == 0:
+        raise ValueError("Amount cannot be 0.")
+    account_id = get_or_create_account(conn, account)
+    category_id = get_or_create_category(conn, category, amount)
+    conn.execute(
+        """
+        INSERT INTO transactions(tx_date, amount, account_id, category_id, note)
+        VALUES (?, ?, ?, ?, ?)
+        """,
+        (parse_date(date_value), amount, account_id, category_id, note or ""),
+    )
+
+
 def add_transaction(args: argparse.Namespace) -> None:
     amount = int(args.amount)
     if amount == 0:
         raise SystemExit("Amount cannot be 0.")
     with connect() as conn:
         init_db(conn)
-        account_id = get_or_create_account(conn, args.account)
-        category_id = get_or_create_category(conn, args.category, amount)
-        conn.execute(
-            """
-            INSERT INTO transactions(tx_date, amount, account_id, category_id, note)
-            VALUES (?, ?, ?, ?, ?)
-            """,
-            (parse_date(args.date), amount, account_id, category_id, args.note or ""),
-        )
+        insert_transaction(conn, amount, args.note or "", args.category, args.account, args.date)
         conn.commit()
     print(f"Added {format_money(amount)} in {args.category} via {args.account}.")
 
@@ -209,6 +236,67 @@ def fetch_category_totals(conn: sqlite3.Connection, start: str, end: str) -> lis
     ).fetchall()
 
 
+def fetch_recent_notes(conn: sqlite3.Connection, limit: int = 12) -> list[str]:
+    rows = conn.execute(
+        """
+        SELECT note, COUNT(*) AS use_count, MAX(created_at) AS last_used
+        FROM transactions
+        WHERE TRIM(note) != ''
+        GROUP BY note
+        ORDER BY last_used DESC, use_count DESC, note ASC
+        LIMIT ?
+        """,
+        (limit,),
+    ).fetchall()
+    return [str(row["note"]) for row in rows]
+
+
+def fetch_remembered_categories(conn: sqlite3.Connection, limit: int = 12) -> list[str]:
+    rows = conn.execute(
+        """
+        SELECT c.name, COUNT(t.id) AS use_count, MAX(t.created_at) AS last_used
+        FROM categories c
+        LEFT JOIN transactions t ON t.category_id = c.id
+        GROUP BY c.id, c.name
+        ORDER BY use_count DESC, last_used DESC, c.name ASC
+        LIMIT ?
+        """,
+        (limit,),
+    ).fetchall()
+    return [str(row["name"]) for row in rows]
+
+
+def fetch_remembered_accounts(conn: sqlite3.Connection, limit: int = 8) -> list[str]:
+    rows = conn.execute(
+        """
+        SELECT a.name, COUNT(t.id) AS use_count, MAX(t.created_at) AS last_used
+        FROM accounts a
+        LEFT JOIN transactions t ON t.account_id = a.id
+        GROUP BY a.id, a.name
+        ORDER BY use_count DESC, last_used DESC, a.name ASC
+        LIMIT ?
+        """,
+        (limit,),
+    ).fetchall()
+    return [str(row["name"]) for row in rows]
+
+
+def show_memory(args: argparse.Namespace) -> None:
+    with connect() as conn:
+        init_db(conn)
+        if args.kind == "notes":
+            values = fetch_recent_notes(conn, args.limit)
+        elif args.kind == "categories":
+            values = fetch_remembered_categories(conn, args.limit)
+        else:
+            values = fetch_remembered_accounts(conn, args.limit)
+    if not values:
+        print(f"No remembered {args.kind} yet.")
+        return
+    for index, value in enumerate(values, start=1):
+        print(f"{index:>2}. {value}")
+
+
 def report(args: argparse.Namespace) -> None:
     start, end = month_range(args.month)
     with connect() as conn:
@@ -237,6 +325,284 @@ def dashboard(args: argparse.Namespace) -> None:
         curses.wrapper(draw_dashboard)
     except curses.error:
         print("Your terminal does not support this dashboard mode. Try `python money.py report`.")
+
+
+def quick_entry(args: argparse.Namespace) -> None:
+    del args
+    with connect() as conn:
+        init_db(conn)
+    if curses is None:
+        print("Quick entry mode needs curses. It is available on Linux/Termux terminals.")
+        print("Use `python money.py add <amount> <note> -c <category> -a <account>` instead.")
+        return
+    try:
+        curses.wrapper(draw_quick_entry)
+    except curses.error:
+        print("Your terminal does not support quick entry mode.")
+
+
+def draw_quick_entry(stdscr: curses.window) -> None:
+    curses.curs_set(0)
+    stdscr.keypad(True)
+    state = QuickEntryState()
+    keyboard = [
+        ["1", "2", "3", "+"],
+        ["4", "5", "6", "-"],
+        ["7", "8", "9", "BKSP"],
+        ["0", "00", "CLR", "FIELD"],
+        ["FOOD", "TRANS", "SHOP", "OTHER"],
+        ["NOTE<", "NOTE>", "CAT<", "CAT>"],
+        ["SAVE", "QUIT"],
+    ]
+    flat_keys = [item for row in keyboard for item in row]
+    fields = ["amount", "note", "category", "account"]
+
+    while True:
+        with connect() as conn:
+            init_db(conn)
+            notes = fetch_recent_notes(conn, 8)
+            categories = fetch_remembered_categories(conn, 8)
+            accounts = fetch_remembered_accounts(conn, 6)
+        if accounts and state.account == "cash":
+            state.account = accounts[0]
+
+        stdscr.erase()
+        height, width = stdscr.getmaxyx()
+        lines = build_quick_lines(width, height, state, keyboard, notes, categories, accounts)
+        for y, line in enumerate(lines[: max(0, height - 1)]):
+            try:
+                stdscr.addnstr(y, 0, line, max(0, width - 1))
+            except curses.error:
+                pass
+        stdscr.refresh()
+
+        key = stdscr.get_wch()
+        if key in (27, "\x1b", "q", "Q"):
+            return
+        if key in (9, "\t"):
+            state.active_field = (state.active_field + 1) % len(fields)
+            continue
+        if key == curses.KEY_LEFT:
+            state.selected_key = max(0, state.selected_key - 1)
+            continue
+        if key == curses.KEY_RIGHT:
+            state.selected_key = min(len(flat_keys) - 1, state.selected_key + 1)
+            continue
+        if key == curses.KEY_UP:
+            state.selected_key = move_virtual_key(keyboard, state.selected_key, -1)
+            continue
+        if key == curses.KEY_DOWN:
+            state.selected_key = move_virtual_key(keyboard, state.selected_key, 1)
+            continue
+        if key in (10, 13, "\n", "\r", curses.KEY_ENTER):
+            result = apply_virtual_key(state, flat_keys[state.selected_key], notes, categories)
+            if result == "quit":
+                return
+            continue
+        if key in (curses.KEY_BACKSPACE, 8, 127, "\b", "\x7f"):
+            edit_active_field(state, "BKSP")
+            continue
+        if isinstance(key, str) and key >= " ":
+            apply_typed_key(state, key)
+
+
+def build_quick_lines(
+    width: int,
+    height: int,
+    state: QuickEntryState,
+    keyboard: list[list[str]],
+    notes: list[str],
+    categories: list[str],
+    accounts: list[str],
+) -> list[str]:
+    del height
+    fields = [
+        ("amount", state.amount),
+        ("note", state.note),
+        ("category", state.category),
+        ("account", state.account),
+    ]
+    lines = [
+        fit("MoneyTerm Quick Entry", width),
+        fit("Type normally, or use arrow keys + Enter on the virtual keyboard. q quits.", width),
+        "",
+    ]
+    for index, (label, value) in enumerate(fields):
+        marker = ">" if index == state.active_field else " "
+        lines.append(fit(f"{marker} {label.upper():8} {value}", width))
+    lines.extend(
+        [
+            "",
+            fit(f"Remembered notes: {', '.join(notes[:4]) if notes else '(none yet)'}", width),
+            fit(f"Categories: {', '.join(categories[:6]) if categories else '(none yet)'}", width),
+            fit(f"Accounts: {', '.join(accounts[:4]) if accounts else '(none yet)'}", width),
+            "",
+            "Virtual keyboard",
+        ]
+    )
+    selected = 0
+    for row in keyboard:
+        parts = []
+        for label in row:
+            token = f"[{label}]" if selected == state.selected_key else f" {label} "
+            parts.append(token.center(8))
+            selected += 1
+        lines.append(fit("".join(parts), width))
+    lines.extend(
+        [
+            "",
+            fit("Tab changes field. Backspace edits. SAVE stores the transaction.", width),
+            fit(state.message, width),
+        ]
+    )
+    return lines
+
+
+def move_virtual_key(keyboard: list[list[str]], selected_key: int, row_delta: int) -> int:
+    rows: list[tuple[int, int]] = []
+    index = 0
+    for row_index, row in enumerate(keyboard):
+        for col_index, _ in enumerate(row):
+            rows.append((row_index, col_index))
+            index += 1
+    row_index, col_index = rows[selected_key]
+    target_row = max(0, min(len(keyboard) - 1, row_index + row_delta))
+    target_col = min(col_index, len(keyboard[target_row]) - 1)
+    new_index = 0
+    for current_row, row in enumerate(keyboard):
+        for current_col, _ in enumerate(row):
+            if current_row == target_row and current_col == target_col:
+                return new_index
+            new_index += 1
+    return selected_key
+
+
+def apply_typed_key(state: QuickEntryState, char: str) -> None:
+    if state.active_field == 0 and char in ("m", "M"):
+        state.active_field = 0
+        return
+    if state.active_field == 0 and char in ("n", "N"):
+        state.active_field = 1
+        return
+    if state.active_field == 0 and char in ("c", "C"):
+        state.active_field = 2
+        return
+    if state.active_field == 0 and char in ("a", "A"):
+        state.active_field = 3
+        return
+    if state.active_field == 0 and char in ("s", "S"):
+        save_quick_entry(state)
+        return
+    edit_active_field(state, char)
+
+
+def apply_virtual_key(
+    state: QuickEntryState,
+    token: str,
+    notes: list[str],
+    categories: list[str],
+) -> str | None:
+    if token == "QUIT":
+        return "quit"
+    if token == "SAVE":
+        save_quick_entry(state)
+        return None
+    if token == "FIELD":
+        state.active_field = (state.active_field + 1) % 4
+        return None
+    if token in ("BKSP", "CLR", "+", "-", "0", "00", "1", "2", "3", "4", "5", "6", "7", "8", "9"):
+        edit_active_field(state, token)
+        return None
+    if token == "FOOD":
+        state.category = "food"
+    elif token == "TRANS":
+        state.category = "transport"
+    elif token == "SHOP":
+        state.category = "shopping"
+    elif token == "OTHER":
+        state.category = "other"
+    elif token == "NOTE<":
+        cycle_note(state, notes, -1)
+    elif token == "NOTE>":
+        cycle_note(state, notes, 1)
+    elif token == "CAT<":
+        cycle_category(state, categories, -1)
+    elif token == "CAT>":
+        cycle_category(state, categories, 1)
+    return None
+
+
+def edit_active_field(state: QuickEntryState, token: str) -> None:
+    values = [state.amount, state.note, state.category, state.account]
+    current = values[state.active_field]
+    if token == "BKSP":
+        current = current[:-1]
+    elif token == "CLR":
+        current = "-" if state.active_field == 0 else ""
+    elif state.active_field == 0:
+        if token in ("+", "-"):
+            current = token
+        elif token.isdigit():
+            current += token
+    else:
+        current += token
+    state.amount, state.note, state.category, state.account = values[0], values[1], values[2], values[3]
+    if state.active_field == 0:
+        state.amount = current
+    elif state.active_field == 1:
+        state.note = current
+    elif state.active_field == 2:
+        state.category = current
+    else:
+        state.account = current
+
+
+def cycle_note(state: QuickEntryState, notes: list[str], delta: int) -> None:
+    if not notes:
+        state.message = "No remembered notes yet."
+        return
+    state.note_index = (state.note_index + delta) % len(notes)
+    state.note = notes[state.note_index]
+    state.active_field = 1
+
+
+def cycle_category(state: QuickEntryState, categories: list[str], delta: int) -> None:
+    if not categories:
+        state.message = "No remembered categories yet."
+        return
+    state.category_index = (state.category_index + delta) % len(categories)
+    state.category = categories[state.category_index]
+    state.active_field = 2
+
+
+def save_quick_entry(state: QuickEntryState) -> None:
+    try:
+        amount = int(state.amount)
+        if amount == 0:
+            raise ValueError
+    except ValueError:
+        state.message = "Amount must be a non-zero integer."
+        return
+    if not state.category.strip():
+        state.message = "Category is required."
+        return
+    if not state.account.strip():
+        state.message = "Account is required."
+        return
+    with connect() as conn:
+        init_db(conn)
+        insert_transaction(
+            conn,
+            amount,
+            state.note.strip(),
+            state.category.strip(),
+            state.account.strip(),
+            state.date,
+        )
+        conn.commit()
+    state.message = f"Saved {format_money(amount)} in {state.category}."
+    state.amount = "-"
+    state.note = ""
 
 
 def draw_dashboard(stdscr: curses.window) -> None:
@@ -398,6 +764,8 @@ def build_parser() -> argparse.ArgumentParser:
               python money.py add -120 breakfast -c food -a cash
               python money.py add 52000 salary -c salary -a bank
               python money.py list --limit 20
+              python money.py notes
+              python money.py quick
               python money.py report
               python money.py dash
             """
@@ -419,12 +787,27 @@ def build_parser() -> argparse.ArgumentParser:
     list_cmd.add_argument("--limit", type=int, default=30)
     list_cmd.set_defaults(func=list_transactions)
 
+    notes = sub.add_parser("notes", help="Show remembered notes")
+    notes.add_argument("--limit", type=int, default=12)
+    notes.set_defaults(func=show_memory, kind="notes")
+
+    categories = sub.add_parser("categories", help="Show remembered categories")
+    categories.add_argument("--limit", type=int, default=12)
+    categories.set_defaults(func=show_memory, kind="categories")
+
+    accounts = sub.add_parser("accounts", help="Show remembered accounts")
+    accounts.add_argument("--limit", type=int, default=8)
+    accounts.set_defaults(func=show_memory, kind="accounts")
+
     rep = sub.add_parser("report", help="Show a monthly report with charts")
     rep.add_argument("-m", "--month", default=None, help="YYYY-MM")
     rep.set_defaults(func=report)
 
     dash = sub.add_parser("dash", help="Open responsive terminal dashboard")
     dash.set_defaults(func=dashboard)
+
+    quick = sub.add_parser("quick", help="Open quick entry with remembered values and virtual keyboard")
+    quick.set_defaults(func=quick_entry)
 
     demo = sub.add_parser("demo", help="Insert sample data")
     demo.set_defaults(func=seed_demo)
