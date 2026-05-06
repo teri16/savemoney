@@ -1,14 +1,20 @@
-# MoneyTerm
+# SaveMoney
 
-MoneyTerm is a terminal-first personal ledger prototype for Termux-like usage.
-It uses only Python standard library modules and stores data in local SQLite.
+SaveMoney is a personal ledger project targeting a future mobile app and web
+app. Its interface direction is terminal-inspired: compact, text-forward, fast
+to operate, and similar in feel to Termux, but it is not intended to run inside
+Termux.
+
+The current Python CLI is an early prototype for accounting logic and input
+flows. It uses only Python standard library modules and stores data in local
+SQLite.
 
 ## Goals
 
-- Fast CLI entry for phone terminals.
-- Responsive terminal dashboard that works when the terminal is resized.
+- Terminal-inspired mobile and web interface.
+- Fast entry flows for phone-sized screens.
 - Digital monthly totals, text bar charts, and pie-share style summaries.
-- A clean SQLite core that can later power a local app and web app.
+- A clean SQLite core that can later power a mobile app and web app.
 
 ## Quick Start
 
@@ -41,20 +47,23 @@ Basic accounting command syntax is documented on a standalone GitHub page:
 
 ## Interface Design
 
-GUI and terminal interface design notes are documented here:
+Mobile and web interface design notes are documented here:
 
 [GUI Design Guide](docs/gui-design.md)
 
-## Termux
+Static interface prototype:
+
+[Terminal-Inspired UI Prototype](prototypes/terminal-inspired-ui.html)
+
+## Current Prototype
 
 ```bash
-pkg install python
 python money.py demo
 python money.py dash
 ```
 
-The dashboard automatically switches between a compact stacked layout and a
-wider two-column layout based on terminal size.
+The CLI/TUI is a prototype only. The final product target is a mobile app and a
+web app with a Termux-like visual style.
 
 Controls:
 
@@ -80,9 +89,9 @@ MONEY_HOME=/path/to/data python money.py list
 
 The current CLI can become the shared core for:
 
-- Local desktop app: Tauri, Electron, or a native wrapper.
-- Web app: API server reading the same SQLite schema.
-- Phone terminal mode: the current CLI/TUI experience in Termux.
+- Mobile app: terminal-inspired UI with touch controls and native text input.
+- Web app: responsive terminal-inspired dashboard.
+- Optional desktop app: Tauri, Electron, or a native wrapper.
 
 ## 同步更新操作手冊
 

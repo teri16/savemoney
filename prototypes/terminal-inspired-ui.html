@@ -1,0 +1,462 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SaveMoney Terminal-Inspired UI Prototype</title>
+  <style>
+    :root {
+      --bg: #0b0f12;
+      --panel: #12191d;
+      --panel-2: #182227;
+      --text: #e4f2eb;
+      --muted: #7f9a91;
+      --accent: #5ee6a8;
+      --warn: #ffcc66;
+      --danger: #ff6b6b;
+      --line: #27363d;
+      --key: #203039;
+      --key-active: #2f6f55;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    .app {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .shell {
+      width: min(1180px, 100%);
+      margin: 0 auto;
+      padding: 16px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .topbar,
+    .panel,
+    .nav {
+      border: 1px solid var(--line);
+      background: var(--panel);
+    }
+
+    .topbar {
+      min-height: 56px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      padding: 10px 12px;
+    }
+
+    .brand {
+      display: grid;
+      gap: 2px;
+    }
+
+    .brand strong {
+      color: var(--accent);
+      font-size: 18px;
+      letter-spacing: 0;
+    }
+
+    .brand span,
+    .status {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .layout {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: 172px minmax(0, 1.2fr) minmax(280px, 0.8fr);
+      align-items: start;
+    }
+
+    .nav {
+      display: grid;
+      padding: 8px;
+      gap: 6px;
+    }
+
+    .nav button,
+    .key,
+    .chip,
+    .action {
+      border: 1px solid var(--line);
+      background: var(--key);
+      color: var(--text);
+      min-height: 38px;
+      padding: 8px 10px;
+      border-radius: 4px;
+    }
+
+    .nav button {
+      text-align: left;
+    }
+
+    .nav button.active,
+    .key.active,
+    .action.primary {
+      background: var(--key-active);
+      border-color: var(--accent);
+      color: #eafff5;
+    }
+
+    .panel {
+      padding: 12px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .panel-title {
+      color: var(--accent);
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 14px;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .metric {
+      background: var(--panel-2);
+      border: 1px solid var(--line);
+      padding: 10px;
+      min-height: 74px;
+      display: grid;
+      align-content: space-between;
+    }
+
+    .metric label {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .metric strong {
+      font-size: 20px;
+      letter-spacing: 0;
+    }
+
+    .expense {
+      color: var(--danger);
+    }
+
+    .income {
+      color: var(--accent);
+    }
+
+    .field-grid {
+      display: grid;
+      gap: 8px;
+    }
+
+    .field {
+      display: grid;
+      grid-template-columns: 92px minmax(0, 1fr);
+      gap: 8px;
+      align-items: center;
+    }
+
+    .field label {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .field input {
+      width: 100%;
+      min-height: 40px;
+      border: 1px solid var(--line);
+      background: #081013;
+      color: var(--text);
+      padding: 8px 10px;
+      border-radius: 4px;
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .chip {
+      min-height: 32px;
+      color: var(--muted);
+    }
+
+    .keypad {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .transactions {
+      display: grid;
+      gap: 6px;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 54px 74px 78px minmax(0, 1fr);
+      gap: 8px;
+      border-bottom: 1px solid var(--line);
+      padding: 8px 0;
+      font-size: 13px;
+    }
+
+    .row span {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .bars {
+      display: grid;
+      gap: 8px;
+    }
+
+    .bar-row {
+      display: grid;
+      grid-template-columns: 82px minmax(0, 1fr) 70px;
+      gap: 8px;
+      align-items: center;
+      font-size: 13px;
+    }
+
+    .bar {
+      height: 12px;
+      background: #0b1215;
+      border: 1px solid var(--line);
+    }
+
+    .bar i {
+      display: block;
+      height: 100%;
+      background: var(--accent);
+    }
+
+    .share {
+      display: grid;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    @media (max-width: 860px) {
+      .shell {
+        padding: 10px;
+      }
+
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .nav {
+        grid-template-columns: repeat(5, 1fr);
+        overflow-x: auto;
+      }
+
+      .nav button {
+        text-align: center;
+        min-width: 82px;
+      }
+
+      .metrics {
+        grid-template-columns: 1fr;
+      }
+
+      .field {
+        grid-template-columns: 1fr;
+      }
+
+      .row {
+        grid-template-columns: 48px 74px minmax(0, 1fr);
+      }
+
+      .row .account {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section class="shell" aria-label="SaveMoney prototype">
+      <header class="topbar">
+        <div class="brand">
+          <strong>SaveMoney</strong>
+          <span>terminal-inspired mobile / web accounting</span>
+        </div>
+        <div class="status">2026-05</div>
+      </header>
+
+      <section class="layout">
+        <nav class="nav" aria-label="Main navigation">
+          <button class="active">Quick</button>
+          <button>Ledger</button>
+          <button>Report</button>
+          <button>Memory</button>
+          <button>Settings</button>
+        </nav>
+
+        <section class="panel">
+          <div class="panel-title">
+            <span>&gt; Quick Entry</span>
+            <span>ready</span>
+          </div>
+
+          <div class="metrics">
+            <div class="metric">
+              <label>Balance</label>
+              <strong>37,170</strong>
+            </div>
+            <div class="metric">
+              <label>Income</label>
+              <strong class="income">52,000</strong>
+            </div>
+            <div class="metric">
+              <label>Expense</label>
+              <strong class="expense">-14,830</strong>
+            </div>
+          </div>
+
+          <div class="field-grid">
+            <div class="field">
+              <label>Amount</label>
+              <input value="-120" inputmode="numeric" aria-label="Amount">
+            </div>
+            <div class="field">
+              <label>Note</label>
+              <input value="早餐" aria-label="Note">
+            </div>
+            <div class="field">
+              <label>Category</label>
+              <input value="food" aria-label="Category">
+            </div>
+            <div class="field">
+              <label>Account</label>
+              <input value="cash" aria-label="Account">
+            </div>
+          </div>
+
+          <div class="chips" aria-label="Suggestions">
+            <button class="chip">早餐</button>
+            <button class="chip">午餐</button>
+            <button class="chip">晚餐</button>
+            <button class="chip">food</button>
+            <button class="chip">transport</button>
+            <button class="chip">shopping</button>
+          </div>
+
+          <div class="keypad" aria-label="Touch keypad">
+            <button class="key">1</button>
+            <button class="key">2</button>
+            <button class="key">3</button>
+            <button class="key">+</button>
+            <button class="key">4</button>
+            <button class="key">5</button>
+            <button class="key">6</button>
+            <button class="key">-</button>
+            <button class="key">7</button>
+            <button class="key">8</button>
+            <button class="key">9</button>
+            <button class="key">del</button>
+            <button class="key">0</button>
+            <button class="key">00</button>
+            <button class="key">clr</button>
+            <button class="key active">next</button>
+          </div>
+
+          <div class="actions">
+            <button class="action">Clear</button>
+            <button class="action primary">Save</button>
+          </div>
+        </section>
+
+        <aside class="panel">
+          <div class="panel-title">
+            <span>&gt; Report</span>
+            <span>month</span>
+          </div>
+
+          <div class="bars">
+            <div class="bar-row">
+              <span>housing</span>
+              <span class="bar"><i style="width: 92%"></i></span>
+              <span>-13,800</span>
+            </div>
+            <div class="bar-row">
+              <span>transport</span>
+              <span class="bar"><i style="width: 18%"></i></span>
+              <span>-1,280</span>
+            </div>
+            <div class="bar-row">
+              <span>food</span>
+              <span class="bar"><i style="width: 12%"></i></span>
+              <span>-800</span>
+            </div>
+          </div>
+
+          <div class="share">
+            <span>housing  93.0%  ooooooooooooooooooo.</span>
+            <span>transport 8.6%  oo..................</span>
+            <span>food      5.4%  o...................</span>
+          </div>
+
+          <div class="transactions">
+            <div class="panel-title">
+              <span>&gt; Recent</span>
+              <span>5 rows</span>
+            </div>
+            <div class="row">
+              <span>05-06</span>
+              <span class="expense">-120</span>
+              <span class="account">cash</span>
+              <span>早餐</span>
+            </div>
+            <div class="row">
+              <span>05-06</span>
+              <span class="expense">-950</span>
+              <span class="account">card</span>
+              <span>日用品</span>
+            </div>
+            <div class="row">
+              <span>05-05</span>
+              <span class="income">52,000</span>
+              <span class="account">bank</span>
+              <span>薪水</span>
+            </div>
+          </div>
+        </aside>
+      </section>
+    </section>
+  </main>
+</body>
+</html>

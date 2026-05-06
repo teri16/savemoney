@@ -205,8 +205,9 @@ Controls:
 - `l` or right arrow: next month
 - `q`: quit
 
-The dashboard changes layout when the terminal is resized. It is designed for
-Termux-style phone terminal usage.
+The dashboard changes layout when the terminal is resized. This is part of the
+CLI prototype, while the final product target is a mobile app and web app with a
+terminal-inspired visual style.
 
 ### Demo Data
 
@@ -434,7 +435,7 @@ python money.py dash
 - `l` 或右方向鍵：下一個月
 - `q`：離開
 
-儀表板會依照 terminal 大小自動切換版面，適合手機 Termux 風格使用。
+儀表板會依照 terminal 大小自動切換版面。這是 CLI 原型功能；最終產品目標是手機 App 與網頁版，並採用 terminal-inspired 視覺風格。
 
 ### 範例資料
 
