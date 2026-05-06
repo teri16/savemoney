@@ -199,9 +199,43 @@
       gap: 6px;
     }
 
+    .shortcut-strip {
+      display: grid;
+      gap: 6px;
+      padding: 8px;
+      border: 1px solid var(--line);
+      background: #0a1114;
+      overflow-x: auto;
+    }
+
+    .shortcut-row {
+      display: flex;
+      gap: 6px;
+      min-width: max-content;
+    }
+
     .chip {
       min-height: 32px;
       color: var(--muted);
+    }
+
+    .shortcut {
+      border: 1px solid var(--line);
+      background: var(--key);
+      color: var(--text);
+      min-height: 34px;
+      min-width: 52px;
+      padding: 6px 10px;
+      border-radius: 4px;
+    }
+
+    .shortcut.wide {
+      min-width: 78px;
+    }
+
+    .shortcut.active {
+      background: var(--key-active);
+      border-color: var(--accent);
     }
 
     .keypad {
@@ -373,6 +407,34 @@
             <button class="chip">food</button>
             <button class="chip">transport</button>
             <button class="chip">shopping</button>
+          </div>
+
+          <div class="shortcut-strip" aria-label="Termux-like shortcut keyboard">
+            <div class="panel-title">
+              <span>&gt; Shortcut Keys</span>
+              <span>swipe</span>
+            </div>
+            <div class="shortcut-row">
+              <button class="shortcut">ESC</button>
+              <button class="shortcut active">TAB</button>
+              <button class="shortcut">←</button>
+              <button class="shortcut">→</button>
+              <button class="shortcut">DEL</button>
+              <button class="shortcut wide">NOTE</button>
+              <button class="shortcut wide">CAT</button>
+              <button class="shortcut wide">ACCT</button>
+              <button class="shortcut wide">TODAY</button>
+              <button class="shortcut wide">SAVE</button>
+            </div>
+            <div class="shortcut-row">
+              <button class="shortcut wide">food</button>
+              <button class="shortcut wide">transport</button>
+              <button class="shortcut wide">shopping</button>
+              <button class="shortcut wide">salary</button>
+              <button class="shortcut wide">cash</button>
+              <button class="shortcut wide">bank</button>
+              <button class="shortcut wide">card</button>
+            </div>
           </div>
 
           <div class="keypad" aria-label="Touch keypad">

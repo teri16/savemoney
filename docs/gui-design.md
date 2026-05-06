@@ -64,6 +64,10 @@ Suggestions
 notes: breakfast, lunch, dinner
 cats : food, transport, shopping
 
+Shortcut Keys
+[ESC] [TAB] [<-] [->] [DEL] [NOTE] [CAT] [ACCT] [TODAY] [SAVE]
+[food] [transport] [shopping] [salary] [cash] [bank] [card]
+
 Keypad
 [1] [2] [3] [+]
 [4] [5] [6] [-]
@@ -81,9 +85,52 @@ controls:
 
 - Native text fields for Chinese and IME support
 - Touch keypad for quick amount input
+- Termux-like shortcut key strip for frequent actions
 - Suggestion chips for old notes and categories
 - Large save button near the bottom
 - Optional hardware keyboard shortcuts on tablets
+
+### Termux-Like Shortcut Keyboard
+
+The mobile app should include a horizontal shortcut keyboard inspired by Termux
+extra keys. This is a UI component inside the app, not a dependency on Termux.
+
+Behavior:
+
+- Always appears near Quick Entry when an input field is focused
+- Horizontally scrollable on small screens
+- Touch-friendly button height, at least 34 px
+- Supports different key sets by field
+- Can later become user-customizable
+
+Default action keys:
+
+- `ESC`: close current picker or clear focus
+- `TAB`: move to next field
+- `<-` / `->`: move cursor or switch suggestion
+- `DEL`: delete one character
+- `NOTE`: open remembered note picker
+- `CAT`: open remembered category picker
+- `ACCT`: open account picker
+- `TODAY`: set date to today
+- `SAVE`: save transaction
+
+Default value keys:
+
+- `food`
+- `transport`
+- `shopping`
+- `salary`
+- `cash`
+- `bank`
+- `card`
+
+Field-specific behavior:
+
+- Amount field: show number helpers, sign toggle, clear, next
+- Note field: show remembered notes and text-edit keys
+- Category field: show category chips and picker key
+- Account field: show account chips and picker key
 
 ### Web Layout
 
@@ -226,6 +273,10 @@ Suggestions
 notes: 早餐, 午餐, 晚餐
 cats : food, transport, shopping
 
+Shortcut Keys
+[ESC] [TAB] [<-] [->] [DEL] [NOTE] [CAT] [ACCT] [TODAY] [SAVE]
+[food] [transport] [shopping] [salary] [cash] [bank] [card]
+
 Keypad
 [1] [2] [3] [+]
 [4] [5] [6] [-]
@@ -242,9 +293,51 @@ Keypad
 
 - 原生文字輸入欄位，支援中文與輸入法
 - 觸控數字鍵盤，快速輸入金額
+- 類似 Termux extra keys 的快捷鍵列
 - 舊備註與舊分類用建議 chip 選取
 - 儲存按鈕放在容易按的位置
 - 平板或網頁版可額外支援鍵盤快捷鍵
+
+### 類 Termux 快捷鍵盤
+
+手機 App 應內建一排類似 Termux extra keys 的快捷鍵盤。這是 App 內的 UI 元件，不是依賴 Termux 執行。
+
+行為：
+
+- 當 Quick Entry 的輸入欄位被選取時顯示
+- 小螢幕可以水平滑動
+- 按鈕高度至少 34 px，適合手指點擊
+- 依照目前欄位切換不同快捷鍵組
+- 未來可讓使用者自訂
+
+預設動作鍵：
+
+- `ESC`：關閉目前選單或取消焦點
+- `TAB`：切換到下一個欄位
+- `<-` / `->`：移動游標或切換建議項目
+- `DEL`：刪除一個字
+- `NOTE`：開啟舊備註選擇
+- `CAT`：開啟舊分類選擇
+- `ACCT`：開啟帳戶選擇
+- `TODAY`：日期設為今天
+- `SAVE`：儲存交易
+
+預設內容鍵：
+
+- `food`
+- `transport`
+- `shopping`
+- `salary`
+- `cash`
+- `bank`
+- `card`
+
+依欄位變化：
+
+- 金額欄：顯示數字輔助、正負號、清除、下一欄
+- 備註欄：顯示舊備註與文字編輯鍵
+- 分類欄：顯示分類 chip 與分類選擇鍵
+- 帳戶欄：顯示帳戶 chip 與帳戶選擇鍵
 
 ### 網頁版版面
 

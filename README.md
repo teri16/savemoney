@@ -12,6 +12,7 @@ SQLite.
 ## Goals
 
 - Terminal-inspired mobile and web interface.
+- Termux-like shortcut keyboard inside the app UI.
 - Fast entry flows for phone-sized screens.
 - Digital monthly totals, text bar charts, and pie-share style summaries.
 - A clean SQLite core that can later power a mobile app and web app.
