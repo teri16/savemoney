@@ -19,6 +19,7 @@ Available commands:
 - `notes`: show remembered notes from previous transactions
 - `categories`: show remembered categories
 - `accounts`: show remembered accounts
+- `menu`: add a transaction through numbered prompts
 - `quick`: open quick entry with remembered values and a virtual keyboard
 - `report`: show a monthly report with charts
 - `dash`: open the terminal dashboard
@@ -115,6 +116,32 @@ python money.py categories --limit 5
 ```
 
 ### Quick Entry With Virtual Keyboard
+
+For Chinese input, `menu` is the recommended stable mode because it uses normal
+terminal prompts instead of full-screen key handling.
+
+Open menu entry mode:
+
+```bash
+python money.py menu
+```
+
+Menu entry flow:
+
+1. Enter the amount.
+2. Pick a remembered note by number, type a new note, or leave it empty.
+3. Pick a remembered category by number, type a new category, or use the default.
+4. Pick a remembered account by number, type a new account, or use the default.
+5. Confirm and save.
+
+Example choices:
+
+```text
+Note
+  1. breakfast
+  2. lunch
+Note (number, new text, or Enter for empty): 2
+```
 
 Open quick entry mode:
 
@@ -224,6 +251,7 @@ python money.py <指令> [選項]
 - `notes`：列出舊有備註
 - `categories`：列出舊有分類
 - `accounts`：列出舊有帳戶
+- `menu`：用選單式問答新增交易
 - `quick`：開啟快速輸入模式，含舊資料選擇與虛擬鍵盤
 - `report`：顯示月報表與圖表
 - `dash`：開啟終端機互動儀表板
@@ -319,6 +347,31 @@ python money.py categories --limit 5
 ```
 
 ### 使用虛擬鍵盤快速輸入
+
+如果要輸入中文，建議優先使用 `menu`，因為它使用一般 terminal 輸入提示，比全畫面按鍵處理更穩定。
+
+開啟選單式輸入：
+
+```bash
+python money.py menu
+```
+
+選單式輸入流程：
+
+1. 輸入金額。
+2. 從舊備註選號、輸入新備註，或直接留空。
+3. 從舊分類選號、輸入新分類，或使用預設值。
+4. 從舊帳戶選號、輸入新帳戶，或使用預設值。
+5. 確認後儲存。
+
+範例：
+
+```text
+Note
+  1. 早餐
+  2. 午餐
+Note (number, new text, or Enter for empty): 2
+```
 
 開啟快速輸入模式：
 

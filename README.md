@@ -15,6 +15,7 @@ It uses only Python standard library modules and stores data in local SQLite.
 ```bash
 python money.py demo
 python money.py report
+python money.py menu
 python money.py quick
 python money.py dash
 ```
@@ -27,6 +28,7 @@ python money.py add 52000 salary -c salary -a bank
 python money.py list --limit 20
 python money.py notes
 python money.py categories
+python money.py menu
 ```
 
 Amounts use positive numbers for income and negative numbers for expenses.

@@ -297,6 +297,103 @@ def show_memory(args: argparse.Namespace) -> None:
         print(f"{index:>2}. {value}")
 
 
+def menu_entry(args: argparse.Namespace) -> None:
+    del args
+    with connect() as conn:
+        init_db(conn)
+        notes = fetch_recent_notes(conn, 10)
+        categories = fetch_remembered_categories(conn, 10)
+        accounts = fetch_remembered_accounts(conn, 8)
+
+    print("MoneyTerm Menu Entry")
+    print("Type q to cancel. Press Enter to keep defaults where shown.")
+    print()
+    amount = prompt_amount()
+    note = prompt_choice("Note", notes, allow_empty=True)
+    category = prompt_choice("Category", categories, default="food")
+    account = prompt_choice("Account", accounts, default="cash")
+    date_value = prompt_text("Date", default="today")
+
+    print()
+    print("Review")
+    print(f"Amount  : {format_money(amount)}")
+    print(f"Note    : {note or '(empty)'}")
+    print(f"Category: {category}")
+    print(f"Account : {account}")
+    print(f"Date    : {date_value}")
+    confirm = input("Save this transaction? [Y/n] ").strip().lower()
+    if confirm not in ("", "y", "yes"):
+        print("Cancelled.")
+        return
+
+    with connect() as conn:
+        init_db(conn)
+        insert_transaction(conn, amount, note, category, account, date_value)
+        conn.commit()
+    print(f"Saved {format_money(amount)} in {category} via {account}.")
+
+
+def prompt_amount() -> int:
+    while True:
+        value = input("Amount, expense uses negative value, for example -120: ").strip()
+        if value.lower() in ("q", "quit", "cancel"):
+            raise SystemExit("Cancelled.")
+        if value == "":
+            print("Amount is required.")
+            continue
+        try:
+            amount = int(value)
+        except ValueError:
+            print("Please enter an integer, for example -120 or 52000.")
+            continue
+        if amount == 0:
+            print("Amount cannot be 0.")
+            continue
+        return amount
+
+
+def prompt_choice(
+    label: str,
+    remembered: list[str],
+    default: str = "",
+    allow_empty: bool = False,
+) -> str:
+    print()
+    print(label)
+    for index, value in enumerate(remembered, start=1):
+        print(f"  {index}. {value}")
+    if default:
+        print(f"Default: {default}")
+    hint = "number, new text"
+    if allow_empty:
+        hint += ", or Enter for empty"
+    elif default:
+        hint += ", or Enter for default"
+    while True:
+        value = input(f"{label} ({hint}): ").strip()
+        if value.lower() in ("q", "quit", "cancel"):
+            raise SystemExit("Cancelled.")
+        if value == "":
+            if allow_empty:
+                return ""
+            if default:
+                return default
+        if value.isdigit():
+            index = int(value) - 1
+            if 0 <= index < len(remembered):
+                return remembered[index]
+            print("That number is not in the list.")
+            continue
+        return value
+
+
+def prompt_text(label: str, default: str = "") -> str:
+    value = input(f"{label} [{default}]: ").strip()
+    if value.lower() in ("q", "quit", "cancel"):
+        raise SystemExit("Cancelled.")
+    return value or default
+
+
 def report(args: argparse.Namespace) -> None:
     start, end = month_range(args.month)
     with connect() as conn:
@@ -765,6 +862,7 @@ def build_parser() -> argparse.ArgumentParser:
               python money.py add 52000 salary -c salary -a bank
               python money.py list --limit 20
               python money.py notes
+              python money.py menu
               python money.py quick
               python money.py report
               python money.py dash
@@ -798,6 +896,9 @@ def build_parser() -> argparse.ArgumentParser:
     accounts = sub.add_parser("accounts", help="Show remembered accounts")
     accounts.add_argument("--limit", type=int, default=8)
     accounts.set_defaults(func=show_memory, kind="accounts")
+
+    menu = sub.add_parser("menu", help="Add a transaction through numbered prompts")
+    menu.set_defaults(func=menu_entry)
 
     rep = sub.add_parser("report", help="Show a monthly report with charts")
     rep.add_argument("-m", "--month", default=None, help="YYYY-MM")
